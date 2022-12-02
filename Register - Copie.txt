@@ -1,0 +1,9 @@
+Employer,Nom,Salaire,Post
+>RABE,100,Mgr
+>RAKOTO,200,Ass
+>RASOA,120,Secr
+>BONUS,500,Joc
+
+Departement,Name,Loc
+>RABE,RABELAND
+>RASOA,RASOALAND

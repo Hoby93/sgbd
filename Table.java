@@ -1,7 +1,9 @@
 package base;
-import java.util.*;
 
-public class Table {
+import java.util.*;
+import java.io.Serializable;
+
+public class Table implements Serializable {
     String[] nomCol;
     Object[] valCol;
 
@@ -24,6 +26,7 @@ public class Table {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -33,6 +36,7 @@ public class Table {
                 return true;
             }
         }
+        
         return false;
     }
 

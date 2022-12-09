@@ -7,14 +7,15 @@ import java.util.*;
 import java.lang.reflect.*;
 
 public class AccesRegister {
-    String fileName = "Register.txt";
+    String dbName = "Defaut";
+    String fileName = "./bd/BasketBall.txt";
 
     public AccesRegister() {
         
     }
 
     public String[] getEachLine() throws Exception {
-        File fl = new File("Register.txt");
+        File fl = new File(fileName);
         FileReader file = new FileReader(fl);
         BufferedReader readLines = new BufferedReader(file); 
         Object[] lines = readLines.lines().toArray();  
@@ -57,6 +58,8 @@ public class AccesRegister {
         char cote = ">".toCharArray()[0];
         char space = " ".toCharArray()[0];
 
+        boolean isExiste = false;
+
         for(int i = 0; i < lines.length; i++) {
             
             char[] first = lines[i].toCharArray();
@@ -64,12 +67,12 @@ public class AccesRegister {
                 if(first[0] != cote && first[0] != space) {
                     String[] desc = lines[i].split(",");
                     if(desc[0].equalsIgnoreCase(table)) {
+                        isExiste = true;
                         String[] cls = prepareColonne(desc);
                         i++;
                         while(i < lines.length) {
                             try {
                                 if(lines[i].toCharArray()[0] == cote) {
-                                    //System.out.println(lines[i]);
                                     ans.add(new Table(cls, prepareValues(lines[i])));
                                 }
                                 i++;
@@ -78,15 +81,15 @@ public class AccesRegister {
                             }
                         }
                         break;
-                    }//*/
-                    //System.out.println(first[0]);
+                    }
+
                 }
             } catch(Exception e) {
-                //break;
+                //e.printStackTrace();
             }
         }
 
-        if(ans.size() == 0) {
+        if(!isExiste) {
             throw new Exception("** Aucun table '" + table + "' correspondant **");
         }
 
@@ -111,14 +114,17 @@ public class AccesRegister {
         String[] values = valCol.split(",");
         String[] save = getEachLine();
 
-        if(getTableContent(TName).get(0).getAllNom().length != values.length) {
-            throw new Exception("** Erreur lie(s) au(x) nombre(s) d'argument(s) **");
+        try {
+            if(getTableContent(TName).get(0).getAllNom().length != values.length) {
+                throw new Exception("** Erreur lie(s) au(x) nombre(s) d'argument(s) **");
+            }
+        } catch(Exception ex) {
+            //ex.printStackTrace();
         }
 
         char cote = ">".toCharArray()[0];
         char space = " ".toCharArray()[0];
-        //System.out.println("LAST-SIZE>>"+splitLine().length);
-        //getTableContent(TName);
+  
         int limit = getTableContent(TName).size();
         CleanFile();
         int count = 0;
@@ -142,6 +148,8 @@ public class AccesRegister {
                 addHere = false;
             }
         }
+
+        throw new Exception("** 01 Ligne  cree **");
     }
 
     public void update(String TName, String[][] update, Vector<Table> condition) throws Exception {
@@ -160,13 +168,18 @@ public class AccesRegister {
         boolean isTable = false;
         int index = 0;
 
+        int count = 0;
+
         for(int i = 0; i < lines.length; i++) {     
             char[] first = lines[i].toCharArray();
             try {
                 if(isTable) {
                     if(tables.get(index).isOn(condition)) {
-                        tables.get(index).setColValues(update);
-                        filOut.println(tables.get(index).fileFormat());
+                        if(update != null) {
+                            tables.get(index).setColValues(update);
+                            filOut.println(tables.get(index).fileFormat());
+                        }
+                        count++;
                     } else {
                         filOut.println(lines[i]);
                     }
@@ -185,6 +198,107 @@ public class AccesRegister {
                 filOut.println();
             }
         }
+        throw new Exception("** 0" + count + " Modification(s) effectuee(s) **");
+    }
+
+    public void createTable(String TName, String Col) throws Exception {
+        File fl = new File(fileName);
+        FileOutputStream out = new FileOutputStream(fl,true);
+        PrintWriter filOut = new PrintWriter(out, true);
+
+        String[] lines = getEachLine();
+
+        //System.out.println("Il y a " + lines.length + "lignes dans la base " + dbName);
+
+        CleanFile();
+
+        if(lines.length < 2) {
+            filOut.println(TName + "," + Col);
+        } else {
+            char cote = ">".toCharArray()[0];
+            char space = " ".toCharArray()[0];
+
+            for(int i = 0; i < lines.length; i++) {     
+                try {
+                    filOut.println(lines[i]);
+                } catch(Exception e) {
+                    filOut.println();
+                }
+            }
+            filOut.println();
+            filOut.println(TName + "," + Col);
+        }
+
+        throw new Exception("** Table cree **");
+    }
+
+    public void createDB(String dbName) throws Exception {
+        File fl = new File("./bd/" + dbName + ".txt");
+        if(!fl.exists()) {
+            fl.createNewFile();
+
+            throw new Exception("** DataBase cree **");
+        } else {
+            throw new Exception("** La base '" + dbName + "' existe deja **");
+        } 
+    }
+
+    public Vector<Table> showTable() throws Exception {
+        Vector<Table> ans = new Vector<Table>();
+        String[] lines = getEachLine();
+        char cote = ">".toCharArray()[0];
+        char space = " ".toCharArray()[0];
+
+        for(int i = 0; i < lines.length; i++) {
+            
+            char[] first = lines[i].toCharArray();
+            try {
+                if(first[0] != cote && first[0] != space) {
+                    String[] cls = {"All_Tables"};
+                    //String[] desc = ;
+                    Object[] val = {lines[i].split(",")[0]};
+            
+                    ans.add(new Table(cls, val));
+                }
+            } catch(Exception e) {
+                //break;
+            }
+        }
+
+        if(ans.size() == 0) {
+            throw new Exception("** Aucun table pour l'instant **");
+        }
+
+        return ans;
+    }
+
+    public Vector<Table> showDB() throws Exception {
+        Vector<Table> ans = new Vector<Table>();
+
+        File currentFile = new File("./bd");
+        File[] fileInside = currentFile.listFiles();
+
+        for(int i = 0; i < fileInside.length; i++) {
+            String col[] = {"All_DataBase"};
+            Object val[] = {fileInside[i].getName().replaceAll(".txt","")};
+            
+            ans.add(new Table(col, val));
+        }
+        //System.out.println("Taille : " + fileInside.length);
+
+        return ans;
+    }
+
+    public void setDB(String dbname) throws Exception {
+        this.fileName = "bd/" + dbname + ".txt";
+        this.dbName = dbname;
+
+        //System.out.println("** DataBase modifie **");
+        throw new Exception("** DataBase modifiee **");
+    }
+
+    public String dbName() {
+        return dbName;
     }
 
 }

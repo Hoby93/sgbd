@@ -1,0 +1,34 @@
+(1) Creation DataBase
+	- CREATE DATABASE DBName
+
+(2) Voir DataBase(s)
+	- SHOW DATABASE
+
+(3) Utilisation DataBase
+	- USE DBName
+
+(4) Creation Table
+	- CREATE TABLE TName (C1,C2,C3,...,Cn)
+
+(5) Voir Table(s)
+	- SHOW TABLE
+
+(6) Modification dans une Table
+	- UPDATE TName SET C1=X1,C2=X2,...,Cn=Xn WHERE C1=W1 AND/OR ... AND/OR Cn=Wn
+
+(7) Suppression dans une Table
+	- DELETE TName WHERE C1=W1 AND/OR ... AND/OR Cn=Wn
+
+(8) Projection Simple :
+	-  SELECT C1,...,Cn FROM TName
+
+(9) Projection avec Selection (Multiple)
+	-  SELECT C1,...,Cn FROM TName WHERE C1=W1 AND/OR ... AND/OR Cn=Wn
+
+(10) Projection avec Jointure (02 Tables seulement)
+	-  SELECT C1,...,Cn FROM T1Name JOIN T2Name On T1C=T2C (Jointure)
+
+NB:
+- Pas de ';' apres chaque requette
+
+@ETU001839

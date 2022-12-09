@@ -1,0 +1,4 @@
+Etudiant,IdE,Nom,Prenom,Prom
+>1,RAKOTO,Niaina,15
+>2,RAZAFY,Miora,15
+>3,RABE,Linda,15

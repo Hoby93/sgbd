@@ -1,0 +1,6 @@
+Pays,IdP,Nom,Continent
+>1,Madagascar,Afrique
+>2,Maurice,Afrique
+>3,Maroc,Afrique
+>4,Tunisie,Afrique
+>5,Argentine,Amerique

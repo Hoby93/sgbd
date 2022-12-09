@@ -11,12 +11,15 @@ public class Sql {
 
     }
 
-    public void DisplayResult(Vector<Table> R, String[] show) throws Exception {
+    public void DisplayResult(Vector<Table> R) throws Exception {
         int row = 0;
         String trait = "";
         String col = " ";
 
-        R = Projection(R, show);
+        if(R.size() == 0) {
+            throw new Exception("** Aucun element pour l'instant **");
+        }
+
         for(int i = 0; i < R.get(0).getAllNom().length; i++) {
             String next = R.get(0).getAllNom()[i];
             col = col +  next;
@@ -34,13 +37,13 @@ public class Sql {
         System.out.println(trait);
 
 
-        for(int i=0;i<R.size();i++) {
+        for(int i=0; i < R.size(); i++) {
             col = " ";
             for(int x = 0; x < R.get(i).getAllNom().length; x++) {
                 String next = R.get(i).getAllVal()[x].toString();
                 col = col +  next;
                 int z = 16 - next.toCharArray().length;
-                for(int n = 0;n < z; n++ ) {
+                for(int n = 0; n < z; n++ ) {
                     col = col + " ";
                 }
                 col = col + "| ";
@@ -49,7 +52,7 @@ public class Sql {
             row++;
         }
         System.out.println(trait);
-        System.out.println("0" + row + " lignes");
+        System.out.println("0" + row + " ligne(s)");
     }
 
     public String[] stringArray(Vector<String> vc) {
@@ -131,7 +134,7 @@ public class Sql {
 
     public Vector<Table> Division(Vector<Table> R1, Vector<Table> R2) throws Exception {
         String[] same = sameCol(R1, R2);
-        System.out.println("Here" + same.length);
+
         Vector<Table> R3 = Projection(R1, same);
         Vector<Table> R4 = Projection(R2, notSame(same, R2));
         Vector<Table> R5 = ProduitCartesien(R4, R3);
@@ -375,29 +378,30 @@ public class Sql {
         return allCond;
     }
 
-    public void SELECT(String rqt) throws Exception {
+    public Vector<Table> SELECT(String rqt) throws Exception {
         rqt = onlyOneSpace(rqt);
         String[] myRQT = rqt.split(" ");
         String[] show = Colonne(file.getTableContent(myRQT[3]).get(0).getAllNom(), myRQT[1]);
 
-        /*if(!myRQT[0].equalsIgnoreCase("SELECT")) {
-            throw new Exception("** Commande '" + myRQT[0] + "' inconnue **");
-        }*/
         if(!myRQT[2].equalsIgnoreCase("FROM")) {
             throw new Exception("** Commande '" + myRQT[2] + "' inconnue **");
         }
         
         if(myRQT.length == 4) {
-            System.out.println("\n-> " + rqt + "\n");
-                DisplayResult(file.getTableContent(myRQT[3]), show);
+            //System.out.println("\n-> " + rqt + "\n");
+                Vector<Table> R = file.getTableContent(myRQT[3]);
+
+                return Projection(R, show);
+                //DisplayResult(Projection(R, show));
         } else {
             myRQT = rqt.split(" ",6);
             if(myRQT[4].equalsIgnoreCase("WHERE")) {
 
                 Vector<Table> allCond = allSelection(myRQT[3], myRQT[5]);
-                System.out.println("\n-> " + rqt + "\n");
+                //System.out.println("\n-> " + rqt + "\n");
                 
-                DisplayResult(allCond, show);
+                return Projection(allCond, show);
+                //DisplayResult(Projection(allCond, show));
 
             } else if(myRQT[4].equalsIgnoreCase("JOIN")) {
                 String[] forJoin = myRQT[5].split(" ");
@@ -407,35 +411,60 @@ public class Sql {
                 if(!forJoin[1].equalsIgnoreCase("ON")) {
                     throw new Exception("** Syntax '" + forJoin[1] + "' Invalide **");
                 }
-                System.out.println("--> " + myRQT[5]);
+                //System.out.println("--> " + myRQT[5]);
                 String[] on = forJoin[2].split("=");
                 Vector<Table> joined = Join(file.getTableContent(myRQT[3]), file.getTableContent(forJoin[0]), on);
                 if(joined.size() == 0) {
                     throw new Exception("** Echec du Jointure **");
                 }
 
-                System.out.println("\n-> " + rqt + "\n");
-                DisplayResult(joined, show);
+                //System.out.println("\n-> " + rqt + "\n");
+
+                return Projection(joined, show);
+                //DisplayResult(Projection(joined, show));
             } else {
                 throw new Exception("** Commande '" + myRQT[4] + "' inconnue **");
             }
         }//*/
     }
 
-    public void executeQuery(String rqt) throws Exception {
+    public Vector<Table> executeQuery(String rqt) throws Exception {
         rqt = onlyOneSpace(rqt);
+
+        //System.out.println("\n-> " + rqt + "\n");
+
         String[] myRQT = rqt.split(" ");
 
         switch(myRQT[0].toLowerCase()) {
-            case "select" : 
-                SELECT(rqt);
+            case "use" :
+                SETDB(rqt);
                 break;
+            case "select" : 
+                return SELECT(rqt);
             case "insert" :
                 INSERT(rqt);
                 break;
-            default :
-                throw  new Exception("** Commande " + myRQT[0] + "inconnue **");
+            case "update" :
+                UPDATE(rqt);
+                break;
+            case "delete" :
+                DELETE(rqt);
+                break;
+            case "show" :
+                if(myRQT[1].equalsIgnoreCase("TABLE")) {
+                    return SHOWTABLE();
+                } else {
+                    return SHOWDB();
+                } 
+            case "create" :
+                if(myRQT[1].equalsIgnoreCase("TABLE"))
+                    CREATETABLE(rqt);
+                else 
+                    CREATEDB(rqt);
+                break;
         }
+
+        throw  new Exception("** Commande '" + myRQT[0] + "' Inconnue **");
     }
 
     public String insertValues(String rqt) {
@@ -487,7 +516,60 @@ public class Sql {
         file.update(myRQT[1], updateValues(myRQT[3]), allSelection(myRQT[1], myRQT[5]));
     }
 
-    public void Update(String TName, String[][] update, String[][] condition) throws Exception {
-        //file.update(TName, update, condition);
+    public void DELETE(String rqt) throws Exception {
+        String[] myRQT = rqt.split(" ", 4);
+
+        if(!myRQT[2].equalsIgnoreCase("WHERE")) {
+            throw new Exception("** Commande '" + myRQT[2] + "' inconnue **");
+        }
+
+        file.update(myRQT[1], null, allSelection(myRQT[1], myRQT[3]));
+    }
+
+    public void CREATETABLE(String rqt) throws Exception {
+        String[] myRQT = rqt.split(" ", 4);
+        if(!myRQT[1].equalsIgnoreCase("TABLE")) {
+            throw new Exception("** Syntax '" + myRQT[1] + "' Error **");
+        }
+        myRQT[3] = noSpace(myRQT[3]);
+
+        String col = myRQT[3].substring(1, endIndex(myRQT[3]));
+
+        file.createTable(myRQT[2], col);
+    }
+
+    public void CREATEDB(String rqt) throws Exception {
+        String[] myRQT = rqt.split(" ");
+        if(!myRQT[1].equalsIgnoreCase("DATABASE")) {
+            throw new Exception("** Syntax '" + myRQT[1] + "' Error **");
+        }
+
+        file.createDB(myRQT[2]);
+    }
+
+    public Vector<Table> SHOWTABLE() throws Exception {
+        Vector<Table> tables = file.showTable();
+        String[] show = {"*"};
+
+        return Projection(tables, show);
+        //DisplayResult(Projection(tables, show));
+    }
+
+    public Vector<Table> SHOWDB() throws Exception {
+        Vector<Table> db = file.showDB();
+        String[] show = {"*"};
+
+        return Projection(db, show);
+        //DisplayResult(Projection(db, show));
+    }
+
+    public void SETDB(String rqt) throws Exception {
+        String[] myRQT = rqt.split(" ");
+
+        file.setDB(myRQT[1]);
+    }
+
+    public String dbName() {
+        return file.dbName();
     }
 }
